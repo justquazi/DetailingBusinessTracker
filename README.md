@@ -21,12 +21,6 @@ A Python + SQLite-based desktop application to track customers, vehicles, servic
 
 ---
 
-## 📸 Screenshots *(optional)*
-
-_Add screenshots of your app UI here once uploaded to the repo._
-
----
-
 ## 🚀 Getting Started
 
 ### Requirements
