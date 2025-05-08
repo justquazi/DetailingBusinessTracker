@@ -1,5 +1,6 @@
 # DetailingBusinessTracker
 a small project I made using python and SQlite3 to track my small detailing business
+(Thanks ChatGPT for writing this README as its 4:30 AM and i want to sleep.)
 
 # 🧼 Detailing Business Tracker
 
