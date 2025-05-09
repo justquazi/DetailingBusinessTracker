@@ -12,59 +12,122 @@ os.makedirs(os.path.join(BASE_DIR, 'data'), exist_ok=True)
 conn = sqlite3.connect(DB_PATH)
 c = conn.cursor()
 
+#New Initialization function
 def initialize_database():
-    # Create tables if they don't exist
-    # Customer table
+    conn.execute("PRAGMA foreign_keys = ON")  # Ensure FK enforcement
+
+    # Drop tables if they already exist (to avoid conflict)
+    # Uncomment if needed for testing purposes
+
+
+    # c.execute("DROP TABLE IF EXISTS services")
+    # c.execute("DROP TABLE IF EXISTS vehicles")
+    # c.execute("DROP TABLE IF EXISTS customers")
+
+    # Customers
     c.execute('''
-              CREATE TABLE IF NOT EXISTS customers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                contact TEXT NOT NULL,
-                paid INTEGER DEFAULT 0  -- 0 = not paid, 1 = paid
+        CREATE TABLE IF NOT EXISTS customers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            contact TEXT NOT NULL,
+            paid INTEGER DEFAULT 0
         )
     ''')
 
-    #Vehicle table
+    # Vehicles with ON DELETE CASCADE
     c.execute('''
-              CREATE TABLE IF NOT EXISTS vehicles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                customer_id INTEGER NOT NULL,
-                make TEXT NOT NULL,
-                model TEXT NOT NULL,
-                year INTEGER NOT NULL,
-                plate TEXT,
-                colour TEXT,
-                FOREIGN KEY (customer_id) REFERENCES customers (id)
-        )
-    ''')
-    #Notes
-    # Plate is optional, so it can be NULL.
-    # The customer_id is a foreign key that references the id in the customers table.
-
-
-    #Service Table
-    c.execute('''
-              CREATE TABLE IF NOT EXISTS services (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                vehicle_id INTEGER NOT NULL,
-                hours REAL NOT NULL,
-                price REAL NOT NULL,
-                date TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (vehicle_id) REFERENCES vehicles (id)
+        CREATE TABLE IF NOT EXISTS vehicles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            customer_id INTEGER NOT NULL,
+            make TEXT NOT NULL,
+            model TEXT NOT NULL,
+            year INTEGER NOT NULL,
+            plate TEXT,
+            colour TEXT,
+            FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
         )
     ''')
 
-    #Purchase Table
+    # Services with ON DELETE CASCADE
     c.execute('''
-              CREATE TABLE IF NOT EXISTS purchases (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              item TEXT NOT NULL,
-              cost REAL NOT NULL,
-              date TEXT DEFAULT CURRENT_TIMESTAMP,
-              notes TEXT NOT NULL
+        CREATE TABLE IF NOT EXISTS services (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vehicle_id INTEGER NOT NULL,
+            hours REAL NOT NULL,
+            price REAL NOT NULL,
+            date TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
         )
     ''')
+
+    # Purchases (not linked, so unchanged)
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS purchases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item TEXT NOT NULL,
+            cost REAL NOT NULL,
+            date TEXT DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT NOT NULL
+        )
+    ''')
+
     conn.commit()
+
+#Old Initialization function
+
+# def initialize_database():
+#     # Create tables if they don't exist
+#     # Customer table
+#     c.execute('''
+#               CREATE TABLE IF NOT EXISTS customers (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 name TEXT NOT NULL,
+#                 contact TEXT NOT NULL,
+#                 paid INTEGER DEFAULT 0  -- 0 = not paid, 1 = paid
+#         )
+#     ''')
+
+#     #Vehicle table
+#     c.execute('''
+#               CREATE TABLE IF NOT EXISTS vehicles (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 customer_id INTEGER NOT NULL,
+#                 make TEXT NOT NULL,
+#                 model TEXT NOT NULL,
+#                 year INTEGER NOT NULL,
+#                 plate TEXT,
+#                 colour TEXT,
+#                 FOREIGN KEY (customer_id) REFERENCES customers (id)
+#         )
+#     ''')
+#     #Notes
+#     # Plate is optional, so it can be NULL.
+#     # The customer_id is a foreign key that references the id in the customers table.
+
+
+#     #Service Table
+#     c.execute('''
+#               CREATE TABLE IF NOT EXISTS services (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 vehicle_id INTEGER NOT NULL,
+#                 hours REAL NOT NULL,
+#                 price REAL NOT NULL,
+#                 date TEXT DEFAULT CURRENT_TIMESTAMP,
+#                 FOREIGN KEY (vehicle_id) REFERENCES vehicles (id)
+#         )
+#     ''')
+
+#     #Purchase Table
+#     c.execute('''
+#               CREATE TABLE IF NOT EXISTS purchases (
+#               id INTEGER PRIMARY KEY AUTOINCREMENT,
+#               item TEXT NOT NULL,
+#               cost REAL NOT NULL,
+#               date TEXT DEFAULT CURRENT_TIMESTAMP,
+#               notes TEXT NOT NULL
+#         )
+#     ''')
+#     conn.commit()
 
 #Customer Functions
 def addCustomer(name, contact):
@@ -75,9 +138,7 @@ def addCustomer(name, contact):
     conn.commit()
 
 def deleteCustomer(customer_id):
-    c.execute('''
-              DELETE FROM customers WHERE id = ?
-    ''', (customer_id,))
+    c.execute("DELETE FROM customers WHERE id = ?", (customer_id))
     conn.commit()
 
 def getAllCustomers():
@@ -129,9 +190,15 @@ def deleteService(service_id):
 
 def getServicesByVehicle(vehicle_id):
     c.execute('''
-              SELECT * FROM services WHERE vehicle_id = ?
+        SELECT services.id, services.vehicle_id, customers.name, services.hours, services.price, services.date
+        FROM services
+        JOIN vehicles ON services.vehicle_id = vehicles.id
+        JOIN customers ON vehicles.customer_id = customers.id
+        WHERE services.vehicle_id = ?
+        ORDER BY services.date DESC
     ''', (vehicle_id,))
     return c.fetchall()
+
 
 def getAllServices(): 
     c.execute('''
