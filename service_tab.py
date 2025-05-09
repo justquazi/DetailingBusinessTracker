@@ -3,12 +3,13 @@ import tkinter as tk
 from tkinter import ttk
 from tkcalendar import DateEntry
 from datetime import date
-
+ 
 class ServiceTab:
     def __init__(self, parent):
         self.frame = ttk.Frame(parent)
-        self.build_service_tab_ui()
         self.selected_vehicle_id = None
+        self.build_service_tab_ui()
+       
 
     def build_service_tab_ui(self):
         # Form frame
@@ -92,13 +93,18 @@ class ServiceTab:
 
     def refresh_vehicle_list(self):
         vehicles = database.getAllVehiclesWithOwners()
-        vehicle_names = [f"{vehicle[0]} - {vehicle[1]} {vehicle[2]} ({vehicle[4]})" for vehicle in vehicles]
+        vehicle_names = ["Show All"] + [f"{vehicle[0]} - {vehicle[1]} {vehicle[2]} ({vehicle[4]})" for vehicle in vehicles]
         self.vehicle_dropdown['values'] = vehicle_names
         self.vehicle_map = {f"{vehicle[0]} - {vehicle[1]} {vehicle[2]} ({vehicle[4]})": vehicle[0] for vehicle in vehicles}
 
     def on_vehicle_selection(self, event):
         selected = self.vehicle_var.get()
-        self.selected_vehicle_id = self.vehicle_map.get(selected)
+        if selected == "Show All":
+            self.selected_vehicle_id = None
+        else:
+            self.selected_vehicle_id = self.vehicle_map.get(selected)
+        self.refresh_service_list()
+
     
     def on_service_selection(self, event):
         selected_item = self.service_tree.selection()
@@ -139,6 +145,10 @@ class ServiceTab:
         for row in self.service_tree.get_children():
             self.service_tree.delete(row)
 
-        services = database.getAllServices()
+        if self.selected_vehicle_id:
+            services = database.getServicesByVehicle(self.selected_vehicle_id)
+        else:
+            services = database.getAllServices()
+
         for service in services:
             self.service_tree.insert("", "end", values=service)
