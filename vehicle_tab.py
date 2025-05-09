@@ -109,6 +109,7 @@ class VehicleTab:
         vehicle_id = self.vehicle_tree.item(selected_item, "values")[0]
         database.deleteVehicle(vehicle_id) # Call the function to delete the customer from the database
         self.update_vehicle_list()
+        self.service_tab.refresh_vehicle_list()  # Refresh the vehicle list in the service tab
         self.delete_button.config(state=tk.DISABLED)
 
     def on_customer_selection(self, event):
@@ -152,6 +153,7 @@ class VehicleTab:
             self.colour_vehicle_entry.delete(0, tk.END)
 
             self.update_vehicle_list()
+            self.service_tab.refresh_vehicle_list()
 
     def update_vehicle_list(self, show_all=False):
         for row in self.vehicle_tree.get_children():
