@@ -94,13 +94,13 @@ class PurchaseTab:
             item = self.purchase_tree.item(selected_item)
             values = item['values']
             self.selected_purchase_id = values[0]
-            self.item_entry.delete(0, tk.END)
-            self.item_entry.insert(0, values[1])
-            self.cost_entry.delete(0, tk.END)
-            self.cost_entry.insert(0, values[2])
-            self.date_entry.set_date(values[3])
-            self.notes_entry.delete(0, tk.END)
-            self.notes_entry.insert(0, values[4])
+            # self.item_entry.delete(0, tk.END)
+            # self.item_entry.insert(0, values[1])
+            # self.cost_entry.delete(0, tk.END)
+            # self.cost_entry.insert(0, values[2])
+            # self.date_entry.set_date(values[3])
+            # self.notes_entry.delete(0, tk.END)
+            # self.notes_entry.insert(0, values[4])
             self.delete_button.config(state=tk.NORMAL)
         else:
             self.delete_button.config(state=tk.DISABLED)
